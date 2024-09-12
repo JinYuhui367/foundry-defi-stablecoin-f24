@@ -13,8 +13,8 @@ contract DeployDSC is Script {
     function run() external returns (DecentralizedStableCoin, DSCEngine, HelpConfig) {
         HelpConfig helper = new HelpConfig();
 
-        (address wethUsdPriceFeed, address wbtcUsdPriceFeed, address weth, address wbtc, uint256 deployerKey) =
-            helper.activeNetworkConfig();
+        // uint256 deployerKey
+        (address wethUsdPriceFeed, address wbtcUsdPriceFeed, address weth, address wbtc,) = helper.activeNetworkConfig();
 
         tokenAddresses = [weth, wbtc];
         priceFeedAddresses = [wethUsdPriceFeed, wbtcUsdPriceFeed];
