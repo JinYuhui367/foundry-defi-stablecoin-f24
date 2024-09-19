@@ -126,13 +126,7 @@ contract DSCEngine is ReentrancyGuard {
         address tokenCollateralAddress,
         uint256 amountCollateral,
         uint256 amountDscToMint
-    )
-        public
-        isAllowedToken(tokenCollateralAddress)
-        moreThanZero(amountCollateral)
-        moreThanZero(amountDscToMint)
-        nonReentrant
-    {
+    ) public isAllowedToken(tokenCollateralAddress) moreThanZero(amountCollateral) moreThanZero(amountDscToMint) {
         depositCollateral(tokenCollateralAddress, amountCollateral);
         mintDsc(amountDscToMint);
     }
