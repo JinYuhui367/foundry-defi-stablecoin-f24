@@ -271,28 +271,46 @@ contract DSCEngine is ReentrancyGuard {
         }
     }
 
+    function _getUsdValue(address token, uint256 amount) private view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
+        (, int256 price,,,) = priceFeed.latestRoundData();
+        return (uint256(price) * ADDITIONAL_PRICE_PRECISION * amount) / PRECISION;
+    }
+
+    function _calculateHealthFactor(uint256 totalDscMinted, uint256 collateralValueInUsd)
+        internal
+        pure
+        returns (uint256)
+    {
+        if (totalDscMinted == 0) return type(uint256).max;
+        uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
+        return (collateralAdjustedForThreshold * PRECISION) / totalDscMinted;
+    }
+
     ///////////////////////////
     //   External / Public View Functions  //
     ///////////////////////////
+    function calculateHealthFactor(uint256 totalDscMinted, uint256 collateralValueInUsd)
+        external
+        pure
+        returns (uint256)
+    {
+        return _calculateHealthFactor(totalDscMinted, collateralValueInUsd);
+    }
 
     function getAccountCollateralValueInUsd(address user) public view returns (uint256 totalCollateralInUsd) {
         for (uint256 i = 0; i < s_collateralAddresses.length; i++) {
             address token = s_collateralAddresses[i];
             uint256 amount = s_collaterDeposited[user][token];
-            totalCollateralInUsd += getUsdValue(token, amount);
+            totalCollateralInUsd += _getUsdValue(token, amount);
         }
+        return totalCollateralInUsd;
     }
 
     function getTokenAmountFromUsd(address token, uint256 usdAmountInWei) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
         (, int256 price,,,) = priceFeed.latestRoundData();
         return (usdAmountInWei * PRECISION) / (uint256(price) * ADDITIONAL_PRICE_PRECISION);
-    }
-
-    function getUsdValue(address token, uint256 amount) public view returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
-        (, int256 price,,,) = priceFeed.latestRoundData();
-        return (uint256(price) * ADDITIONAL_PRICE_PRECISION * amount) / PRECISION;
     }
 
     function getAccountInformation(address user)
@@ -302,5 +320,56 @@ contract DSCEngine is ReentrancyGuard {
     {
         (totalDSCMinted, collateralValueInUsd) = _getAccountInformation(user);
         return (totalDSCMinted, collateralValueInUsd);
+    }
+
+    function getUsdValue(
+        address token,
+        uint256 amount // in WEI
+    ) external view returns (uint256) {
+        return _getUsdValue(token, amount);
+    }
+
+    function getCollateralBalanceOfUser(address user, address token) external view returns (uint256) {
+        return s_collaterDeposited[user][token];
+    }
+
+    function getPrecision() external pure returns (uint256) {
+        return PRECISION;
+    }
+
+    function getAdditionalFeedPrecision() external pure returns (uint256) {
+        return ADDITIONAL_PRICE_PRECISION;
+    }
+
+    function getLiquidationThreshold() external pure returns (uint256) {
+        return LIQUIDATION_THRESHOLD;
+    }
+
+    function getLiquidationBonus() external pure returns (uint256) {
+        return LIQUIDATION_BONUS;
+    }
+
+    function getLiquidationPrecision() external pure returns (uint256) {
+        return LIQUIDATION_PRECISION;
+    }
+
+    function getMinHealthFactor() external pure returns (uint256) {
+        return MIN_HEALTH_FACTOR;
+    }
+
+    function getCollateralTokens() external view returns (address[] memory) {
+        return s_collateralAddresses;
+    }
+
+    function getDsc() external view returns (address) {
+        return address(i_dsc);
+    }
+
+    function getCollateralTokenPriceFeed(address token) external view returns (address) {
+        return s_priceFeeds[token];
+    }
+
+    function getHealthFactor(address user) external view returns (uint256) {
+        return _healthFactor(user);
     }
 }
