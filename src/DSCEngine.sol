@@ -237,11 +237,12 @@ contract DSCEngine is ReentrancyGuard {
         // amount of DSC minted
         // total value of collateral in USDT
         (uint256 totalDSCMinted, uint256 collateralValueInUsd) = _getAccountInformation(user);
-        uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
-        // 150 ETH / 100 DSC
-        // 150 * 50 == 7500, 7500 / 100 == 75
-        // 75 adjustETH / 100 DSC = 0.75 < 1
-        return (collateralAdjustedForThreshold * PRECISION) / totalDSCMinted;
+        // uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
+        // // 150 ETH / 100 DSC
+        // // 150 * 50 == 7500, 7500 / 100 == 75
+        // // 75 adjustETH / 100 DSC = 0.75 < 1
+        // return (collateralAdjustedForThreshold * PRECISION) / totalDSCMinted;
+        return _calculateHealthFactor(totalDSCMinted, collateralValueInUsd);
     }
 
     function _redeemCollateral(address token, uint256 amountToRedeem, address from, address to) internal {
