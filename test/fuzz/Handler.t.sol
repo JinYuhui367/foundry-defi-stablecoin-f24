@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {DeployDSC} from "../../script/DeployDSC.s.sol";
 import {DSCEngine} from "../../src/DSCEngine.sol";
@@ -17,6 +17,8 @@ contract Handler is Test {
 
     address weth;
     address wbtc;
+    address[] usersWithCollateralMinted;
+    uint256 public timesMintIsCalles = 0;
     uint256 constant MAX_DEPOSIT = type(uint96).max;
 
     constructor(DSCEngine _engine, DecentralizedStableCoin _dsc) {
@@ -47,7 +49,55 @@ contract Handler is Test {
         ERC20Mock(wbtc).mint(address(msg.sender), amountToDeposite);
         ERC20Mock(weth).approve(address(dsce), amountToDeposite);
         ERC20Mock(wbtc).approve(address(dsce), amountToDeposite);
+
+        console.log("1 amountToDeposite: ", amountToDeposite);
         dsce.depositCollateral(collateral, amountToDeposite);
+        usersWithCollateralMinted.push(msg.sender);
         vm.stopPrank();
+    }
+
+    function redeemCollateral(uint256 collateralSeed, uint256 amountToRedeem, uint256 userSeed) public {
+        if (usersWithCollateralMinted.length == 0) {
+            return;
+        }
+        address sender = usersWithCollateralMinted[userSeed % usersWithCollateralMinted.length];
+        // TODO: 这里没有prank的话，dsce.redeemCollateral(collateral, amountToRedeem)传入的from地址为address(this),导致余额为0！！！
+        vm.startPrank(sender);
+        address collateral = _getCollateralFromSeed(collateralSeed);
+        uint256 totalBalanceCollaterral = dsce.getCollateralBalanceOfUser(sender, collateral);
+        amountToRedeem = bound(amountToRedeem, 0, totalBalanceCollaterral);
+        if (amountToRedeem == 0) {
+            return;
+        }
+        // console.log("totalBalanceCollaterral: ", totalBalanceCollaterral);
+        console.log("3 amountToRedeem: ", amountToRedeem);
+        // console.log("msg.sender: ", msg.sender);
+        dsce.redeemCollateral(collateral, amountToRedeem);
+        vm.stopPrank();
+    }
+
+    function mintDsc(uint256 amountToMint, uint256 userSeed) public {
+        if (usersWithCollateralMinted.length == 0) {
+            return;
+        }
+        address sender = usersWithCollateralMinted[userSeed % usersWithCollateralMinted.length];
+        (uint256 totalDSCMinted, uint256 collateralValueInUsd) = dsce.getAccountInformation(sender);
+
+        int256 maxAmountToMint = (int256(collateralValueInUsd / 2) - int256(totalDSCMinted));
+
+        if (maxAmountToMint < 0) {
+            return;
+        }
+
+        amountToMint = bound(amountToMint, 0, uint256(maxAmountToMint));
+        if (amountToMint == 0) {
+            return;
+        }
+        vm.startPrank(sender);
+        console.log("2 amountToMint: ", amountToMint);
+        dsce.mintDsc(amountToMint);
+        vm.stopPrank();
+        timesMintIsCalles++;
+        console.log("** mint times: ", timesMintIsCalles);
     }
 }
