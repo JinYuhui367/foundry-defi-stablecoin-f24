@@ -1,27 +1,5 @@
-// Layout of Contract:
-// version
-// imports
-// interfaces, libraries, contracts
-// errors
-// Type declarations
-// State variables
-// Events
-// Modifiers
-// Functions
-
-// Layout of Functions:
-// constructor
-// receive function (if exists)
-// fallback function (if exists)
-// external
-// public
-// internal
-// private
-// internal & private view & pure functions
-// external & public view & pure functions
-
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.18;
 
 import {DecentralizedStableCoin} from "./DecentralizedStableCoin.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -51,7 +29,6 @@ contract DSCEngine is ReentrancyGuard {
     ///////////
     // Types //
     ///////////
-
     using OracleLib for AggregatorV3Interface;
 
     ///////////////////
@@ -187,7 +164,7 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     /*
-    * @param collateral: The ERC20 token address of the collateral you're using to make the protocol solvent again.
+    * @param token: The ERC20 token address of the collateral you're using to make the protocol solvent again.
     * This is collateral that you're going to take from the user who is insolvent.
     * In return, you have to burn your DSC to pay off their debt, but you don't pay off your own.
     * @param user: The user who is insolvent. They have to have a _healthFactor below MIN_HEALTH_FACTOR
@@ -215,8 +192,8 @@ contract DSCEngine is ReentrancyGuard {
 
         _burnDsc(debtToCover, user, msg.sender);
 
-        //Importantly, we're calling these low level internal calls, so we've going to want to check some `Health Factors` here.
-        //If the `liquidation` somehow doesn't result in the user's `Health Factor` improving, we should revert.&#x20;
+        //Importantly, calling these low level internal calls, so we've going to want to check some `Health Factors` here.
+        //If the `liquidation` somehow doesn't result in the user's `Health Factor` improving, we should revert.;
         uint256 endingUserHealthFactor = _healthFactor(user);
         if (endingUserHealthFactor <= startingUserHealthFactor) {
             revert DSCEngine__HealthFactorNotImproved();
@@ -227,9 +204,9 @@ contract DSCEngine is ReentrancyGuard {
 
     function getHealthFactor() external view {}
 
-    ///////////////////////////
+    //////////////////////////////////////////
     //   Internal / Private View Functions  //
-    ///////////////////////////
+    //////////////////////////////////////////
 
     function _getAccountInformation(address user)
         private
@@ -299,9 +276,9 @@ contract DSCEngine is ReentrancyGuard {
         return (collateralAdjustedForThreshold * PRECISION) / totalDscMinted;
     }
 
-    ///////////////////////////
+    /////////////////////////////////////////
     //   External / Public View Functions  //
-    ///////////////////////////
+    /////////////////////////////////////////
     function calculateHealthFactor(uint256 totalDscMinted, uint256 collateralValueInUsd)
         external
         pure

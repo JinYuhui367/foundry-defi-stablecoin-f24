@@ -197,52 +197,10 @@ contract DSCEngineTest is Test {
         assertEq(ERC20Mock(weth).balanceOf(USER), amountToRedeem);
     }
 
-    // function testLiquidate() public approved setLiquidator {
-    //     // 设置用户的健康因子低于阈值
-    //     vm.prank(USER);
-    //     dsce.depositCollateralAndMintDsc(address(weth), 0.1 ether, 150 ether);
-    //     // deposited 0.1 eth == 200 $
-    //     // minted 150 dsc == 150 $
-    //     // 200 / 150 == 133%
-
-    //     // 计算清算所需的 DSC
-    //     uint256 debtToCover = 150 ether;
-
-    //     // 为清算者提供 DSC
-    //     vm.prank(LIQUIDATOR); // 变更调用者为测试合约
-    //     dsce.depositCollateralAndMintDsc(weth, 10 ether, 10 ether);
-    //     dsc.approve(address(dsce), debtToCover);
-
-    //     // 尝试清算用户
-    //     vm.prank(LIQUIDATOR);
-    //     dsce.liquidate(address(weth), USER, debtToCover);
-
-    //     // 验证用户的 DSC 被销毁
-    //     assertEq(dsc.balanceOf(USER), 0);
-    //     // 验证清算者的 DSC 被转移
-    //     // assertEq(dsc.balanceOf(address(this)), debtToCover);
-    // }
-
-    // function testHealthFactor() public {
-    //     // 设置用户的健康因子
-    //     vm.prank(USER);
-    //     dsce.depositCollateralAndMintDsc(address(weth), AMOUNT_COLLATERAL, INITIAL_DSC_MINT);
-
-    //     // 验证用户的健康因子
-    //     uint256 healthFactor = dsce.getHealthFactor();
-    //     assert(healthFactor < 1e18); // 假设健康因子 < 1 表示健康因子不合格
-    // }
-
     function testDepositZeroCollateral() public {
         vm.prank(USER);
         // 尝试存入零的抵押品，应该会失败
         vm.expectRevert(DSCEngine.DSCEngine__NotMoreThanZero.selector);
         dsce.depositCollateral(address(weth), 0);
-    }
-
-    function testTransferFailed() public {
-        // 测试转账失败的情况
-        // 在这里我们需要模拟 IERC20 的转账失败，可以通过重写 MockToken 来实现
-        // 这部分需要实现一个新的 MockToken，返回 false
     }
 }
