@@ -41,8 +41,8 @@ This project is designed to be a stablecoin where users can deposit WETH and WBT
 ## Quickstart
 
 ```bash
-git clone https://github.com/YourUsername/personal-defi-stablecoin
-cd personal-defi-stablecoin
+git clone https://github.com/JinYuhui367/foundry-defi-stablecoin-f24.git
+cd foundry-defi-stablecoin-f24
 forge build
 ```
 
