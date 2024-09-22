@@ -96,7 +96,7 @@ contract DSCEngineTest is Test {
         ERC20Mock unapprovedToken = new ERC20Mock();
         // ERC20Mock(address(unapprovedToken)).mint(USER, STARTING_ERC20_BALANCE);
         vm.startPrank(USER);
-        vm.expectRevert(DSCEngine.DSCEngine__NotAllowedToken.selector);
+        vm.expectRevert(abi.encodeWithSelector(DSCEngine.DSCEngine__NotAllowedToken.selector, address(unapprovedToken)));
         dsce.depositCollateral(address(unapprovedToken), AMOUNT_COLLATERAL);
         vm.stopPrank();
     }

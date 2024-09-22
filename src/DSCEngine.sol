@@ -6,6 +6,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {OracleLib} from "./libraries/OracleLib.sol";
+import {Script, console} from "forge-std/Script.sol";
 
 /**
  * @title DSCEngine
@@ -35,7 +36,7 @@ contract DSCEngine is ReentrancyGuard {
     //   Errors      //
     ///////////////////
     error DSCEngine__NotMoreThanZero();
-    error DSCEngine__NotAllowedToken();
+    error DSCEngine__NotAllowedToken(address token);
     error DSCEngine__TokenAddressesAndPriceFeedsMustBeSameLength();
     error DSCEngine__TransferFailed();
     error DSCEngine__BreakHealthFactor(uint256 userHealthFactor);
@@ -43,6 +44,7 @@ contract DSCEngine is ReentrancyGuard {
     error DSCEngine__HealthFactorOk();
     error DSCEngine__HealthFactorNotImproved();
     error DSCEngine__InsufficientCollateral();
+    error DSCEngine__TokenAddressesAndPriceFeedAddressesAmountsDontMatch();
 
     ////////////////////////////
     //   State variables      //
@@ -77,7 +79,7 @@ contract DSCEngine is ReentrancyGuard {
 
     modifier isAllowedToken(address tokenAddress) {
         if (s_priceFeeds[tokenAddress] == address(0)) {
-            revert DSCEngine__NotAllowedToken();
+            revert DSCEngine__NotAllowedToken(tokenAddress);
         }
         _;
     }
@@ -158,7 +160,7 @@ contract DSCEngine is ReentrancyGuard {
         }
     }
 
-    function burnDsc(uint256 amountToBurn) public {
+    function burnDsc(uint256 amountToBurn) public moreThanZero(amountToBurn) {
         _burnDsc(amountToBurn, msg.sender, msg.sender);
         _revertIfHealthFactorIsBroken(msg.sender);
     }
@@ -232,6 +234,10 @@ contract DSCEngine is ReentrancyGuard {
 
     function _redeemCollateral(address token, uint256 amountToRedeem, address from, address to) internal {
         if (s_collaterDeposited[from][token] < amountToRedeem) {
+            console.log("from: ", from);
+            console.log("to: ", to);
+            console.log("s_collaterDeposited[from][token]: ", s_collaterDeposited[from][token]);
+            console.log("amountToRedeem: ", amountToRedeem);
             revert DSCEngine__InsufficientCollateral();
         }
         s_collaterDeposited[from][token] -= amountToRedeem;
